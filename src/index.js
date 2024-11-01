@@ -1,4 +1,4 @@
-
+let userDoxed = 0;
 
 /**
  * Gefið efni fyrir verkefni 9, ekki er krafa að nota nákvæmlega þetta en nota
@@ -97,6 +97,7 @@ function renderResults(location, results) {
     el(
       'section',
       {},
+      el('h2', {}, `Niðurstöður`),
       el('h3', {}, `${location.title}`),
       el('p', {}, `Spá fyrir daginn á breiddargráðu ${location.lat} og lengdargráðu ${location.lng}`),
       resultsTable,
@@ -149,7 +150,29 @@ async function onSearch(location) {
  */
 async function onSearchMyLocation(){
   if (navigator.geolocation) {
-    if(confirm("where are you : )")){
+    if(userDoxed == 0 ){
+      if(confirm("where are you : )")){
+        try{
+          console.log(navigator.geolocation);
+          navigator.geolocation.getCurrentPosition(
+              (pos)=>{
+                  onSearch({title: "My Location", lat : pos.coords.latitude , lng : pos.coords.longitude});
+  
+              },
+              (error)=>{
+                  renderError(error);
+              },
+              {timeout:2000}
+          );
+          userDoxed = 1;
+      }
+      catch(error){
+          renderError(error);
+      }
+      }else{
+        renderError("access to location not given");
+      }
+    }else{
       try{
         console.log(navigator.geolocation);
         navigator.geolocation.getCurrentPosition(
@@ -162,13 +185,12 @@ async function onSearchMyLocation(){
             },
             {timeout:2000}
         );
+      }
+      catch(error){
+          renderError(error);
+      }
     }
-    catch(error){
-        renderError(error);
-    }
-    }else{
-      renderError("access to location not given");
-    }
+    
       
   } else { 
       renderError("Geolocation is not supported by this browser.");
@@ -248,14 +270,15 @@ function render(container, locations, onSearch, onSearchMyLocation) {
   locationsElement.appendChild(locationsListElement);
 
   // <div class="loctions"><ul class="locations__list"><li><li><li></ul></div>
-
   const myLocationButtonElement = renderLocationButton('Mín staðstning (þarf leyfi)', () => {
     console.log('Halló!!');
+
     onSearchMyLocation();
   });
   locationsListElement.appendChild(myLocationButtonElement);
 
   for (const location of locations) {
+    
     const liButtonElement = renderLocationButton(location.title, () => {
       console.log('Halló!!', location);
       onSearch(location);
@@ -278,6 +301,10 @@ function render(container, locations, onSearch, onSearchMyLocation) {
   const resultsHeading = document.createElement('h2');
   resultsHeading.appendChild(document.createTextNode('Niðurstöður'));
   outputElement.appendChild(resultsHeading);
+
+  const resultsStartText = document.createElement('p');
+  resultsStartText.appendChild(document.createTextNode('Gat ekki sótt stðstningu'));
+  outputElement.appendChild(resultsStartText);
 
 
   container.appendChild(parentElement);
